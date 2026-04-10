@@ -114,7 +114,7 @@ def standardize_field(field):
 def parse_fields(llm_json):
     final_fields = []
     seen = set()
-    for field in llm_json.get("fields", []):
+    for field in llm_json:
         std_field = standardize_field(field)
         if std_field["label"] not in seen:
             final_fields.append(std_field)
@@ -134,7 +134,7 @@ def run(token, data)->dict:
     title = data["title"]
     brief = data['brief']
     fields = data["fields"]
-    post = data['post'].get('post_img', [])
+    post = data['post_img']
     scheme = data['scheme']
     tag_id = data['tag_id']
     # 判断是否去默认风格

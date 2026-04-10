@@ -48,13 +48,11 @@ description: 对话式运营助手
 ### create_step_2：生成活动动态参数
 - LLM提取分析用户描述的文字，生成初步JSON表单配置fields，若没有，置空
 ```json
-{
-  "fields": [
+[
     {"label":"姓名","type":"Text","isRequire":true,"placeholder": "请输入姓名"},
     {"label":"照片","type":"MyUpload","isRequire":true,"placeholder": "请上传照片", "fileType": "picture"},
     {"label": "行业","type": "MySelect","isRequire":true,"placeholder": "请选择行业", "options": ["选项1","选项2"]}
-  ]
-}
+]
 ```
 - 当字段类型为上传（MyUpload）时，请根据字段含义推断 fileType：
   - 图片/照片/头像 → picture
@@ -65,7 +63,7 @@ description: 对话式运营助手
 
 ---
 
-### create_step_3：对create_step_2的结果做询问（不可跳过）
+### create_step_3：对create_step_2的结果做询问（必须询问，严格执行）
 - 初步生成的JSON字段里fields为空，Skill 问：
 > “请告诉我需要收集哪些报名信息（如：姓名、班级、手机号等）”
 - 初步生成的JSON字段里fields不为空，Skill 问：
@@ -79,24 +77,22 @@ description: 对话式运营助手
 - Skill询问用户（必须执行）：
 > "请问是否有现成的海报图，如果有，请发送海报链接"
 - 如果用户回答有，请等待用户发送
-  - 获取海报链接，赋值给post_img.url
+  - 获取海报链接，赋值给一下JSON的url
 - 如果用户回答没有
-  - 精简提取用户的描述，10~50字左右，赋值给赋值给post_img.desc_str，提示用户将由程序生成海报图
-- 海报字段JSON格式如下：
+  - 精简提取用户的描述，10~50字左右，赋值给赋值给JSON的desc_str，提示用户将由程序生成海报图
+- 海报字段post_img的JSON格式如下：
 ```json
 {
-  "post_img": {
     "url": "海报地址[可为空]",
     "size": "海报尺寸，默认:818*1404",
     "desc_str": "提取的描述"
-  }
 }
 ```
 
 ---
 
 ### create_step_5：生成风格配色（深度思考）
-- 读取`template/scheme_conf.json`文件，列出选项，问用户：
+- 读取`template/scheme_conf.json`文件，提取内容，列出选项，问用户：
 > "请选择其中一种风格，如果都不适合，可以选择由程序根据您的描述自动配色"
 - 若用户选择其中一个，记住对应的tag_id，此流程结束，若用户选择程序生成，继续往下走
 - 读取`template/designh5.json`模板文件，提取配色字段
@@ -141,7 +137,7 @@ description: 对话式运营助手
   "act_type": "活动类型",
   "title": "活动标题",
   "brief": "活动描述",
-  "post": "海报JSON->post_img",
+  "post_img": "海报JSON->post_img",
   "scheme": "配色JSON->scheme:{}",
   "fields": "报名的初步JSON->fields",
   "tag_id": "预设风格->tag_id"
