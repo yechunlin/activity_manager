@@ -1,0 +1,6 @@
+{
+  "api_url": "https://openclaw.aihoge.com/api/h5hy/api/v0/visible/h5/save",
+  "default_poster_url": "https://xzimg.aihoge.com/xiuzan/1682042096535/1.png",
+  "use_llm_for_fields": true,
+  "llm_model": "gpt-4"
+}

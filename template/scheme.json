@@ -1,0 +1,52 @@
+{
+  "8229": {
+    "scheme": {
+      "page_config": {
+        "bgColor": "rgba(12,14,14,1)"
+      },
+      "form": {
+        "cpBorderColor": "rgba(255,255,255,0)",
+        "bgColor": "rgba(255,255,255,1)",
+        "titColor": "rgba(51,51,51,1)",
+        "btnTextColor": "rgba(255,255,255,1)",
+        "btnColor": "rgba(12,20,34,1)",
+        "controlBgColor": "rgba(255,255,255,1)",
+        "controlBorderColor": "rgba(216,216,216,1)",
+        "controlTextColor": "rgba(75,70,64,100)",
+        "controlInnerTextColor": "rgba(75,70,64,100)",
+        "controlInnerPhColor": "rgba(153,153,153,100)"
+      },
+        "long_text": {
+        "bgColor": "gba(255,255,255,0)",
+        "cpBorderColor": "rgba(255,255,255,0)",
+        "color": "rgba(255,255,255,1)"
+      }
+    },
+    "post_url": "http://xzimg.aihoge.com/xiuzan/2026/04/3d98e2ac7d9262b2152efd7e2af7e4d2.png"
+  },
+  "8231": {
+    "scheme": {
+      "page_config": {
+        "bgColor": "rgba(168,27,19,1)"
+      },
+      "form": {
+        "cpBorderColor": "rgba(255,255,255,0)",
+        "bgColor": "rgba(255,255,255,1)",
+        "titColor": "rgba(51,51,51,1)",
+        "btnTextColor": "rgba(255,255,255,1)",
+        "btnColor": "rgba(165,0,25,1)",
+        "controlBgColor": "rgba(255,255,255,1)",
+        "controlBorderColor": "rgba(216,216,216,1)",
+        "controlTextColor": "rgba(75,70,64,100)",
+        "controlInnerTextColor": "rgba(75,70,64,100)",
+        "controlInnerPhColor": "rgba(153,153,153,100)"
+      },
+      "long_text": {
+        "bgColor": "rgba(255,255,255,0)",
+        "cpBorderColor": "rgba(255,255,255,0)",
+        "color": "rgba(255,255,255,1)"
+      }
+    },
+    "post_url": "http://xzimg.aihoge.com/xiuzan/2026/04/e68f5c4acf1df3437c8c0e70082b5725.png"
+  }
+}
