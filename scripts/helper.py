@@ -110,12 +110,13 @@ def generate(mark, template_id, token):
 # 获取活动页面数据
 def generate_page(tid, token):
     template_data = []
-    url = get_domain() + '/api/h5hy/api/v0/visible/preview?tid=' + tid
+    url = get_domain() + '/api/h5hy/api/v0/visible/h5/get?tid=' + tid
     headers = {'Authorization': token}
     res = requests.get(url, headers=headers)
     res = res.json()
-    if res['state'] == 200:
-        template_data = res['result']['data'] or []
+    if res.get('state') == 200:
+        result = res.get('result', {})
+        template_data = result.get('data', [])
 
     return {'data': template_data}
 

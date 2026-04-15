@@ -28,16 +28,15 @@ def get_activity(act_id):
             "act_type": "designh5",
             "title": res['response']['activity']['title'],
             "brief": res['response']['activity']['introduce'],
-            "post": {
-                "post_img": {
-                    "url": res['response']['activity']['indexpic'],
-                    "size": "",
-                    "desc_str": ""
-                }
+            "post_img": {
+                "url": res['response']['activity']['indexpic'],
+                "size": "",
+                "desc_str": ""
             },
-            "fields": {
-                "fields": res['response']['rules']['form_controls'][0]['controls']
-            }
+            "fields": res['response']['rules']['form_controls'][0]['controls'],
+            "scheme": {},
+            "tag_id": "",
+            "use_default_post": 0
         }
     else:
         return {"msg": "获取失败"}

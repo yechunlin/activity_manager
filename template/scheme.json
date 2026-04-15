@@ -22,7 +22,7 @@
         "color": "rgba(255,255,255,1)"
       }
     },
-    "post_url": "http://xzimg.aihoge.com/xiuzan/2026/04/3d98e2ac7d9262b2152efd7e2af7e4d2.png"
+    "post_url": "https://xzimg.aihoge.com/xiuzan/2026/04/3d98e2ac7d9262b2152efd7e2af7e4d2.png"
   },
   "8231": {
     "scheme": {
@@ -47,6 +47,56 @@
         "color": "rgba(255,255,255,1)"
       }
     },
-    "post_url": "http://xzimg.aihoge.com/xiuzan/2026/04/e68f5c4acf1df3437c8c0e70082b5725.png"
+    "post_url": "https://xzimg.aihoge.com/xiuzan/2026/04/e68f5c4acf1df3437c8c0e70082b5725.png"
+  },
+  "8230": {
+    "scheme": {
+      "page_config": {
+        "bgColor": "rgba(134,215,122,1)"
+      },
+      "form": {
+        "cpBorderColor": "rgba(255,255,255,0)",
+        "bgColor": "rgba(255,255,255,0)",
+        "titColor": "rgba(60,60,60,1)",
+        "btnTextColor": "rgba(255,255,255,1)",
+        "btnColor": "rgba(50,155,27,1)",
+        "controlBgColor": "rgba(164,236,154,1)",
+        "controlBorderColor": "rgba(255,255,255,0)",
+        "controlTextColor": "rgba(41,86,50,1)",
+        "controlInnerTextColor": "rgba(41,86,50,1)",
+        "controlInnerPhColor": "rgba(41,86,50,1)"
+      },
+      "long_text": {
+        "bgColor": "rgba(134,215,122,1)",
+        "cpBorderColor": "rgba(255,255,255,0)",
+        "color": "rgba(51,51,51,1)"
+      }
+    },
+    "post_url": "https://xzimg.aihoge.com/xiuzan/1775807648704/20260410155345.jpg"
+  },
+  "8232": {
+    "scheme": {
+      "page_config": {
+        "bgColor": "rgba(31,79,124,1)"
+      },
+      "form": {
+        "cpBorderColor": "rgba(255,255,255,0)",
+        "bgColor": "rgba(255,255,255,1)",
+        "titColor": "rgba(51,51,51,1)",
+        "btnTextColor": "rgba(0,0,0,1)",
+        "btnColor": "rgba(252,207,91,1)",
+        "controlBgColor": "rgba(255,255,255,1)",
+        "controlBorderColor": "rgba(216,216,216,1)",
+        "controlTextColor": "rgba(75,70,64,100)",
+        "controlInnerTextColor": "rgba(75,70,64,100)",
+        "controlInnerPhColor": "rgba(153,153,153,100)"
+      },
+      "long_text": {
+        "bgColor": "rgba(255,255,255,0)",
+        "cpBorderColor": "rgba(255,255,255,0)",
+        "color": "rgba(252,207,91,1)"
+      }
+    },
+    "post_url": "https://xzimg.aihoge.com/xiuzan/1775809004985/20260410161508.jpg"
   }
 }

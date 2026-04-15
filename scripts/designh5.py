@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import time
 import requests
 from datetime import datetime
@@ -7,6 +8,7 @@ from helper import get_domain, try_openai, rand_control_id, generate, generate_p
 from get_activity import get_act_info
 
 DESIGN_API_URL = get_domain() + "/api/h5hy/api/v0/visible/h5/save"
+DESIGN_PREVIEW_API_URL = get_domain() + "/api/h5hy/api/v0/visible/preview"
 DESIGN_DEFAULT_POSTER = 'https://xzimg.aihoge.com/cj/images/6441ee5452f2c.png'
 STANDARD_TYPES = ["Text", "Textarea", "Number", "Mobile", "IDCard", "MyRadio", "MyCheckbox", "MySelect", "Date",
                   "MyUpload"]
@@ -59,8 +61,10 @@ MARK = 'designh5@form'
 
 # 生成海报
 def generate_poster(title, post) -> str:
-    des_str = post.get('desc_str') or title
-    size = post.get('size') or "818*1404"
+    url = post.get('url', '')
+    if url: return url
+    des_str = post.get('desc_str', title)
+    size = post.get('size', "818*1404")
     # OpenAI
     poster = try_openai(des_str, size)
     if poster:
@@ -92,7 +96,8 @@ def standardize_field(field):
         if not t_options:
             control["options"] = OPTION_DEFAULTS
         else:
-            control["options"] = [{"label": item, "value": str(index + 1)} for index, item in enumerate(t_options)]
+            # control["options"] = [{"label": item, "value": str(index + 1)} for index, item in enumerate(t_options)]
+            control["options"] = t_options
 
     if field_type == "MyUpload":
         file_type = field.get("fileType")
@@ -121,6 +126,21 @@ def parse_fields(llm_json):
             seen.add(std_field["label"])
     return final_fields
 
+# 判断表单是否有修改
+def check_fields_update(new_field, old_field) -> bool:
+    # 数量不对，有修改
+    if len(new_field) != len(old_field):
+        return True
+
+    # 没有cid，有修改
+    for new_item in new_field:
+        new_cid = new_item.get('cid', '')
+        if not new_cid:
+            return True
+
+    return new_field == old_field
+
+
 def get_default_scheme(tag_id):
     script_dir = os.path.dirname(os.path.abspath(__file__))
     json_file_path = os.path.join(script_dir, "..", "template", "scheme.json")
@@ -137,11 +157,14 @@ def run(token, data)->dict:
     post = data['post_img']
     scheme = data['scheme']
     tag_id = data['tag_id']
-    # 判断是否去默认风格
+    use_default_post = data['use_default_post']
+    # 判断是否取默认风格
     if tag_id:
         sc = get_default_scheme(tag_id)
-        post['url'] = sc['post_url']
         scheme = sc['scheme']
+        if int(use_default_post) == 1:
+            # 使用内置海报
+            post['url'] = sc['post_url']
 
     # 开始生成活动参数
     now = int(time.time())
@@ -186,6 +209,11 @@ def run(token, data)->dict:
                     tpl_item['item']['config']['bgColor'] = scheme['long_text']['bgColor']
                     tpl_item['item']['config']['cpBorderColor'] = scheme['long_text']['cpBorderColor']
                     tpl_item['item']['config']['color'] = scheme['long_text']['color']
+
+                if brief and tpl_item['item']['type'] == 'RichText':
+                    tpl_item['item']['config']['content'] = "<p><span style=\"font-size:14px\"><span style=\"line-height:1.75\"><span style=\"color:" + scheme['long_text']['color'] + "\">" + brief + "</span></span></span></p>"
+                    tpl_item['item']['config']['bgColor'] = scheme['long_text']['bgColor']
+                    tpl_item['item']['config']['cpBorderColor'] = scheme['long_text']['cpBorderColor']
 
     # 赋值活动数据
     forward = {
@@ -313,54 +341,95 @@ def edit(token, data)->dict:
     title = data["title"]
     brief = data['brief']
     fields = data["fields"]
-    post = data['post'].get('post_img', [])
+    post = data['post_img']
     scheme = data['scheme']
-    # 查询活动信息
-    act_data = get_act_info(act_id, token)
-    # 保留活动开始和结束时间，可覆盖
-    start_at = act_data['response']['activity']['start_time']
-    end_at = act_data['response']['activity']['end_time']
+    tag_id = data['tag_id']
+    use_default_post = data['use_default_post']
     # 默认模板id与模板标识
     template_id = TEMPLATE_ID
     mark = MARK
-    # 海报图
-    poster_url = post.get('url') or generate_poster(title, post)
-    # 推送页面表单设置
-    form_item_id = random_string(6)
+    # 判断是否取默认风格
+    if tag_id:
+        sc = get_default_scheme(tag_id)
+        scheme = sc['scheme']
+        if int(use_default_post) == 1:
+            # 使用内置海报
+            post['url'] = sc['post_url']
 
     # 获取模板数据
     payload = generate_page(act_id, token)
-    # 校准formControls
+    # 查询活动信息
+    act_data = get_act_info(act_id, token)
+
+    # 保留活动开始和结束时间，可覆盖
+    start_at = act_data['response']['activity']['start_time']
+    end_at = act_data['response']['activity']['end_time']
+
+    # 海报图
+    poster_url = generate_poster(title, post)
+
+    # 推送页面表单设置
+    form_item_id = random_string(6)
     form_controls = act_data['response']['rules']['form_controls']
+    # 校准表单字段
     fields = parse_fields(fields)
-    form_controls[0]['id'] = form_item_id
-    form_controls[0]['controls'] = fields
+    # 判断fields是否有修改
+    old_fields = form_controls[0]['controls']
+    field_edit_status = check_fields_update(fields, old_fields)
+    if field_edit_status:
+        # 表单有修改，赋予新组件id
+        form_controls[0]['id'] = form_item_id
+        form_controls[0]['controls'] = fields
+
     # 修改模板表单控件
     for item in payload['data']:
         if item['path'] == 'index':
-            item['data']['pageConfig']['bgColor'] = scheme['page_config']['bg']
+            if scheme != {}:
+                item['data']['pageConfig']['bgColor'] = scheme['page_config']['bgColor']
+
             for tpl_item in item['data']['tpl']:
-                if tpl_item['item']['type'] == 'Image' and tpl_item['item']['config']['cpName'] == 'ShowImage':
+                if tpl_item['item']['type'] == 'Image' and tpl_item['item']['config']['cpName'] == 'Image':
                     tpl_item['item']['config']['imgUrl'][0]['url'] = poster_url
 
                 if tpl_item['item']['type'] == 'Form':
-                    tpl_item['item']['config']['formControls'] = fields
-                    tpl_item['item']['config']['bgColor'] = scheme['form']['bg']
-                    tpl_item['item']['config']['btnColor'] = scheme['form']['btn']
-                    tpl_item['item']['config']['btnTextColor'] = scheme['form']['btntext']
-                    tpl_item['item']['config']['controlBgColor'] = scheme['form']['ctbg']
-                    tpl_item['item']['config']['controlBorderColor'] = scheme['form']['ctborder']
-                    tpl_item['item']['config']['controlInnerPhColor'] = scheme['form']['ctph']
-                    tpl_item['item']['config']['controlInnerTextColor'] = scheme['form']['cttext']
-                    tpl_item['item']['config']['controlTextColor'] = scheme['form']['ctlabel']
-                    tpl_item['item']['config']['cpBorderColor'] = scheme['form']['border']
-                    tpl_item['item']['config']['titColor'] = scheme['form']['ctph']
+                    if field_edit_status:
+                        tpl_item['id'] = form_item_id
+                        tpl_item['item']['config']['formControls'] = fields
+
+                    if scheme != {}:
+                        tpl_item['item']['config']['bgColor'] = scheme['form']['bgColor']
+                        tpl_item['item']['config']['btnColor'] = scheme['form']['btnColor']
+                        tpl_item['item']['config']['btnTextColor'] = scheme['form']['btnTextColor']
+                        tpl_item['item']['config']['controlBgColor'] = scheme['form']['controlBgColor']
+                        tpl_item['item']['config']['controlBorderColor'] = scheme['form']['controlBorderColor']
+                        tpl_item['item']['config']['controlInnerPhColor'] = scheme['form']['controlInnerPhColor']
+                        tpl_item['item']['config']['controlInnerTextColor'] = scheme['form']['controlInnerTextColor']
+                        tpl_item['item']['config']['controlTextColor'] = scheme['form']['controlTextColor']
+                        tpl_item['item']['config']['cpBorderColor'] = scheme['form']['cpBorderColor']
+                        tpl_item['item']['config']['titColor'] = scheme['form']['titColor']
+
+
+                if brief and tpl_item['item']['type'] == 'LongText':
+                    tpl_item['item']['config']['text'] = brief
+                    if scheme != {}:
+                        tpl_item['item']['config']['bgColor'] = scheme['long_text']['bgColor']
+                        tpl_item['item']['config']['cpBorderColor'] = scheme['long_text']['cpBorderColor']
+                        tpl_item['item']['config']['color'] = scheme['long_text']['color']
 
 
                 if brief and tpl_item['item']['type'] == 'RichText':
-                    tpl_item['item']['config']['content'] = "<p class=\"p1\"><span style=\"font-size:14px\"><span style=\"line-height:1.75\"><span style=\"color:#cccccc\">"+brief+"</span></span></span></p>"
-                    tpl_item['item']['config']['bgColor'] = scheme['rich_text']['bg']
-                    tpl_item['item']['config']['cpBorderColor'] = scheme['rich_text']['border']
+                    # 更新文本
+                    tpl_item['item']['config']['content'] = re.sub(r'>(.*?)<', f'>{brief}<', tpl_item['item']['config']['content'], count=1)
+                    if scheme != {}:
+                        # 换配色时
+                        tpl_item['item']['config']['content'] = re.sub(
+                            r'color\s*:\s*[^";]+',
+                            f'color:{scheme['long_text']['color']}',
+                            tpl_item['item']['config']['content']
+                        )
+                        tpl_item['item']['config']['bgColor'] = scheme['long_text']['bgColor']
+                        tpl_item['item']['config']['cpBorderColor'] = scheme['long_text']['cpBorderColor']
+
 
     # 赋值活动数据
     forward = {
@@ -379,7 +448,6 @@ def edit(token, data)->dict:
             "share_settings": act_data['response']['rules']['share_settings'],
             "start_time": start_at,
             "end_time": end_at,
-            "form_controls": form_controls
         },
         "service": "designh5@form"
     }
@@ -390,6 +458,16 @@ def edit(token, data)->dict:
         'Content-Type': 'application/json',
         'Authorization': token
     }
+    # 优先推送页面数据
+    resp = requests.post(DESIGN_PREVIEW_API_URL, json=payload, headers=headers)
+    resp = resp.json()
+    if resp['state'] != 200 or resp['result']['success']['success'] != 1:
+        return {'err_code': -1}
+    # 等待一秒
+    time.sleep(1)
+    # 补充表单参数
+    payload['forward']['data']['form_controls'] = form_controls
+    # 再保存活动
     resp = requests.post(DESIGN_API_URL, json=payload, headers=headers)
     resp = resp.json()
     if resp['state'] == 200 and resp['result']['forward_id']:
