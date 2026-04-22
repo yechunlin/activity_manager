@@ -5,6 +5,7 @@ import uuid
 
 import requests
 import time
+from bs4 import BeautifulSoup
 
 DOMAIN = "https://openclaw.aihoge.com"
 
@@ -146,3 +147,20 @@ def get_user_token(user_id):
         }
     except Exception as e:
         return {'token': ''}
+
+# 替换富文本
+def replace_html(html_template, new_text) -> str :
+    soup = BeautifulSoup(html_template, "html.parser")
+
+    # 找到第一个 <p> 标签
+    first_p = soup.find("p")
+    if not first_p:
+        return f"<p>{new_text}</p>"
+
+    # 找到最内层的文字位置，替换
+    for text_node in first_p.find_all(text=True):
+        text_node.replace_with(new_text)
+        break
+
+    # 只返回处理后的 p 标签
+    return str(first_p)

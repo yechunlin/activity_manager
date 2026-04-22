@@ -1,0 +1,50 @@
+[
+  {
+    "name": "踏青出游记",
+    "des": "一款绿色清新模板，适合春季以及初夏时节出游、露营、野炊...等活动",
+    "template_id": 8052,
+    "mark": "designh5@form"
+  },
+  {
+    "name": "向劳动者致敬",
+    "des": "适用于五一劳动节体验活动",
+    "template_id": 8054,
+    "mark": "designh5@form"
+  },
+  {
+    "name": "草长莺飞·亲子互动",
+    "des": "春游，亲子互动，手绘放风筝",
+    "template_id": 8236,
+    "mark": "designh5@form"
+  },
+  {
+    "name": "摄影·城市微光",
+    "des": "街拍，记录城市暖心一幕",
+    "template_id": 8237,
+    "mark": "designh5@form"
+  },
+  {
+    "name": "阅读推荐",
+    "des": "读一本书，一句话推荐，记录美好",
+    "template_id": 8238,
+    "mark": "designh5@form"
+  },
+  {
+    "name": "春分知多少·问券调查",
+    "des": "节气-春分，知识问卷",
+    "template_id": 8239,
+    "mark": "designh5@form"
+  },
+  {
+    "name": "再生资源回收",
+    "des": "垃圾上门回收",
+    "template_id": 8240,
+    "mark": "designh5@form"
+  },
+  {
+    "name": "丰收运动会",
+    "des": "丰收季节，全民大丰收",
+    "template_id": 8241,
+    "mark": "designh5@form"
+  }
+]

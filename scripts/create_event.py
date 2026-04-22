@@ -32,10 +32,10 @@ def create_event(data):
     match act_type:
         # 报名活动
         case 'designh5':
-            res = designh5.run(token, data)
+            res = designh5.add(token, data)
         # 抽奖活动
         case 'raffle':
-            res = raffle.run(token, data)
+            res = raffle.add(token, data)
         # 默认情况
         case _:
             res = {"err_code": -1}

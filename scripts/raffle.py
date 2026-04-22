@@ -6,7 +6,7 @@ from helper import get_domain, get_uuid_4_hex, generate
 RAFFLE_API_URL = get_domain() + '/api/h5hy/api/v0/visible/h5/save'
 RAFFLE_DEFAULT_POSTER = 'https://xzimg.aihoge.com/xiuzan/2024/03/b8fba610d15761051d2679518dad0858.png'
 
-def run(token, data)->dict:
+def add(token, data)->dict:
     title = data["title"]
     brief = data['brief']
     prizes = data["prizes"]

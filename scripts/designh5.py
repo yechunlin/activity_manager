@@ -4,7 +4,7 @@ import re
 import time
 import requests
 from datetime import datetime
-from helper import get_domain, try_openai, rand_control_id, generate, generate_page, random_string
+from helper import get_domain, try_openai, rand_control_id, generate, generate_page, random_string, replace_html
 from get_activity import get_act_info
 
 DESIGN_API_URL = get_domain() + "/api/h5hy/api/v0/visible/h5/save"
@@ -143,77 +143,122 @@ def check_fields_update(new_field, old_field) -> bool:
 
 def get_default_scheme(tag_id):
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    json_file_path = os.path.join(script_dir, "..", "template", "scheme.json")
+    json_file_path = os.path.join(script_dir, "..", "config", "designh5", "scheme.json")
     with open(json_file_path, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     return data[tag_id] or {}
 
 # 创建活动
-def run(token, data)->dict:
-    title = data["title"]
-    brief = data['brief']
-    fields = data["fields"]
-    post = data['post_img']
-    scheme = data['scheme']
-    tag_id = data['tag_id']
-    use_default_post = data['use_default_post']
-    # 判断是否取默认风格
-    if tag_id:
-        sc = get_default_scheme(tag_id)
-        scheme = sc['scheme']
-        if int(use_default_post) == 1:
-            # 使用内置海报
-            post['url'] = sc['post_url']
+def add(token, data)->dict:
+    title = data["title"] # 标题
+    brief = data['brief'] # 介绍|描述
+    fields = data["fields"] # 表单字段
+    post = data['post_img'] # 海报
+    scheme = data['scheme'] # 风格配色
+    tag_id = data['tag_id'] # 预设风格id
+    use_default_post = data['use_default_post'] # 启用预设风格内部海报
+    template_id = data['template_id'] # 模板id
+    mark = data['mark'] # 模板标识
+
+    appoint_template_flag = False
+    if template_id and mark:
+        # 启用指定模板
+        appoint_template_flag = True
+    else:
+        # 启用默认模板
+        template_id = TEMPLATE_ID
+        mark = MARK
 
     # 开始生成活动参数
     now = int(time.time())
     start_at = now
     end_at = start_at + (86400 * 7)
-    # 默认模板id与模板标识
-    template_id = TEMPLATE_ID
-    mark = MARK
-    # 模板表单id
-    form_control_tpl_id = ''
-    # 海报图
-    poster_url = post.get('url') or generate_poster(title, post)
+    poster_url = DESIGN_DEFAULT_POSTER
     # 获取模板数据
     payload = generate(mark, template_id, token)
-    # 校准formControls
-    fields = parse_fields(fields)
-    # 修改模板表单控件
-    for item in payload['data']:
-        if item['path'] == 'index':
-            item['data']['pageConfig']['bgColor'] = scheme['page_config']['bgColor']
-            for tpl_item in item['data']['tpl']:
-                if tpl_item['item']['type'] == 'Image' and tpl_item['item']['config']['cpName'] == 'Image':
-                    tpl_item['item']['config']['imgUrl'][0]['url'] = poster_url
+    # 模板表单id
+    form_control_tpl_id = ''
 
-                if tpl_item['item']['type'] == 'Form':
-                    form_control_tpl_id = tpl_item['id']
-                    tpl_item['item']['config']['formControls'] = fields
-                    tpl_item['item']['config']['bgColor'] = scheme['form']['bgColor']
-                    tpl_item['item']['config']['btnColor'] = scheme['form']['btnColor']
-                    tpl_item['item']['config']['btnTextColor'] = scheme['form']['btnTextColor']
-                    tpl_item['item']['config']['controlBgColor'] = scheme['form']['controlBgColor']
-                    tpl_item['item']['config']['controlBorderColor'] = scheme['form']['controlBorderColor']
-                    tpl_item['item']['config']['controlInnerPhColor'] = scheme['form']['controlInnerPhColor']
-                    tpl_item['item']['config']['controlInnerTextColor'] = scheme['form']['controlInnerTextColor']
-                    tpl_item['item']['config']['controlTextColor'] = scheme['form']['controlTextColor']
-                    tpl_item['item']['config']['cpBorderColor'] = scheme['form']['cpBorderColor']
-                    tpl_item['item']['config']['titColor'] = scheme['form']['titColor']
+    if appoint_template_flag:
+        # 若有表单， 校准formControls
+        if fields:
+            fields = parse_fields(fields)
 
+        # 指定模板
+        for item in payload['data']:
+            if item['path'] == 'index':
+                # poster_url = item['coverImg']
+                for tpl_item in item['data']['tpl']:
+                    if tpl_item['item']['type'] == 'Image' and tpl_item['item']['config']['cpName'] == 'Image':
+                        poster_url = tpl_item['item']['config']['imgUrl'][0]['url']
 
-                if brief and tpl_item['item']['type'] == 'LongText':
-                    tpl_item['item']['config']['text'] = brief
-                    tpl_item['item']['config']['bgColor'] = scheme['long_text']['bgColor']
-                    tpl_item['item']['config']['cpBorderColor'] = scheme['long_text']['cpBorderColor']
-                    tpl_item['item']['config']['color'] = scheme['long_text']['color']
+                    if tpl_item['item']['type'] == 'Form':
+                        form_control_tpl_id = tpl_item['id']
+                        if fields:
+                            tpl_item['item']['config']['formControls'] = fields
+                        else:
+                            fields = tpl_item['item']['config']['formControls']
 
-                if brief and tpl_item['item']['type'] == 'RichText':
-                    tpl_item['item']['config']['content'] = "<p><span style=\"font-size:14px\"><span style=\"line-height:1.75\"><span style=\"color:" + scheme['long_text']['color'] + "\">" + brief + "</span></span></span></p>"
-                    tpl_item['item']['config']['bgColor'] = scheme['long_text']['bgColor']
-                    tpl_item['item']['config']['cpBorderColor'] = scheme['long_text']['cpBorderColor']
+                    if brief and tpl_item['item']['type'] == 'LongText':
+                        tpl_item['item']['config']['text'] = brief
+
+                    if brief and tpl_item['item']['type'] == 'RichText':
+                        new_content = replace_html(tpl_item['item']['config']['content'], brief)
+                        tpl_item['item']['config']['content'] = new_content
+
+    else:
+        # 判断是否取默认风格
+        if tag_id:
+            sc = get_default_scheme(tag_id)
+            scheme = sc['scheme']
+            if int(use_default_post) == 1:
+                # 使用内置海报
+                post['url'] = sc['post_url']
+
+        # 海报图
+        poster_url = post.get('url') or generate_poster(title, post)
+        # 校准formControls
+        fields = parse_fields(fields)
+        # 修改模板表单控件
+        for item in payload['data']:
+            if item['path'] == 'index':
+                item['data']['pageConfig']['bgColor'] = scheme['page_config']['bgColor']
+                for tpl_item in item['data']['tpl']:
+                    if tpl_item['item']['type'] == 'Image' and tpl_item['item']['config']['cpName'] == 'Image':
+                        tpl_item['item']['config']['imgUrl'][0]['url'] = poster_url
+
+                    if tpl_item['item']['type'] == 'Form':
+                        form_control_tpl_id = tpl_item['id']
+                        tpl_item['item']['config']['formControls'] = fields
+                        tpl_item['item']['config']['bgColor'] = scheme['form']['bgColor']
+                        tpl_item['item']['config']['btnColor'] = scheme['form']['btnColor']
+                        tpl_item['item']['config']['btnTextColor'] = scheme['form']['btnTextColor']
+                        tpl_item['item']['config']['controlBgColor'] = scheme['form']['controlBgColor']
+                        tpl_item['item']['config']['controlBorderColor'] = scheme['form']['controlBorderColor']
+                        tpl_item['item']['config']['controlInnerPhColor'] = scheme['form']['controlInnerPhColor']
+                        tpl_item['item']['config']['controlInnerTextColor'] = scheme['form']['controlInnerTextColor']
+                        tpl_item['item']['config']['controlTextColor'] = scheme['form']['controlTextColor']
+                        tpl_item['item']['config']['cpBorderColor'] = scheme['form']['cpBorderColor']
+                        tpl_item['item']['config']['titColor'] = scheme['form']['titColor']
+
+                    if tpl_item['item']['type'] == 'Title' and tpl_item['item']['config']['cpName'] == 'Title':
+                        tpl_item['item']['config']['color'] = scheme['title']['color']
+
+                    if tpl_item['item']['category'] == 'base' and tpl_item['item']['type'] == 'Text' and tpl_item['item']['config']['cpName'] == 'Text':
+                        tpl_item['item']['config']['color'] = scheme['text']['color']
+
+                    if brief and tpl_item['item']['type'] == 'LongText':
+                        tpl_item['item']['config']['text'] = brief
+                        tpl_item['item']['config']['bgColor'] = scheme['long_text']['bgColor']
+                        tpl_item['item']['config']['cpBorderColor'] = scheme['long_text']['cpBorderColor']
+                        tpl_item['item']['config']['color'] = scheme['long_text']['color']
+
+                    if brief and tpl_item['item']['type'] == 'RichText':
+                        tpl_item['item']['config']['content'] = "<p><span style=\"font-size:14px\"><span style=\"line-height:1.75\"><span style=\"color:" + scheme['long_text']['color'] + "\">" + brief + "</span></span></span></p>"
+                        tpl_item['item']['config']['bgColor'] = scheme['long_text']['bgColor']
+                        tpl_item['item']['config']['cpBorderColor'] = scheme['long_text']['cpBorderColor']
+
 
     # 赋值活动数据
     forward = {
@@ -345,9 +390,7 @@ def edit(token, data)->dict:
     scheme = data['scheme']
     tag_id = data['tag_id']
     use_default_post = data['use_default_post']
-    # 默认模板id与模板标识
-    template_id = TEMPLATE_ID
-    mark = MARK
+
     # 判断是否取默认风格
     if tag_id:
         sc = get_default_scheme(tag_id)
@@ -364,6 +407,9 @@ def edit(token, data)->dict:
     # 保留活动开始和结束时间，可覆盖
     start_at = act_data['response']['activity']['start_time']
     end_at = act_data['response']['activity']['end_time']
+
+    # 模板标识
+    mark = act_data['response']['activity']['mark']
 
     # 海报图
     poster_url = generate_poster(title, post)
@@ -408,6 +454,13 @@ def edit(token, data)->dict:
                         tpl_item['item']['config']['cpBorderColor'] = scheme['form']['cpBorderColor']
                         tpl_item['item']['config']['titColor'] = scheme['form']['titColor']
 
+                if tpl_item['item']['type'] == 'Title' and tpl_item['item']['config']['cpName'] == 'Title':
+                    if scheme != {}:
+                        tpl_item['item']['config']['color'] = scheme['title']['color']
+
+                if tpl_item['item']['category'] == 'base' and tpl_item['item']['type'] == 'Text' and tpl_item['item']['config']['cpName'] == 'Text':
+                    if scheme != {}:
+                        tpl_item['item']['config']['color'] = scheme['text']['color']
 
                 if brief and tpl_item['item']['type'] == 'LongText':
                     tpl_item['item']['config']['text'] = brief
