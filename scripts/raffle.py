@@ -492,7 +492,9 @@ def add(token, data)->dict:
     resp = resp.json()
     if resp['state'] == 200 and resp['result']['forward_id']:
         act_id = resp['result']['forward_id']
+        # 开启活动
         open_activity(act_id, token)
+        time.sleep(1.5)
         act_url = "https://m.aihoge.com/h5?mark=raffle@designh5&tid=" + act_id + "&path=index"
         return {
             'err_code': 0,

@@ -269,7 +269,7 @@ def add(token, data)->dict:
                         tpl_item['item']['config']['color'] = scheme['long_text']['color']
 
                     if brief and tpl_item['item']['type'] == 'RichText':
-                        tpl_item['item']['config']['content'] = "<p><span style=\"font-size:14px\"><span style=\"line-height:1.75\"><span style=\"color:" + scheme['long_text']['color'] + "\">" + brief + "</span></span></span></p>"
+                        tpl_item['item']['config']['content'] = "<p>" + brief + "</p>"
                         tpl_item['item']['config']['bgColor'] = scheme['long_text']['bgColor']
                         tpl_item['item']['config']['cpBorderColor'] = scheme['long_text']['cpBorderColor']
 
@@ -487,14 +487,8 @@ def edit(token, data)->dict:
 
                 if brief and tpl_item['item']['type'] == 'RichText':
                     # 更新文本
-                    tpl_item['item']['config']['content'] = re.sub(r'>(.*?)<', f'>{brief}<', tpl_item['item']['config']['content'], count=1)
+                    tpl_item['item']['config']['content'] = "<p>" + brief + "</p>"
                     if scheme != {}:
-                        # 换配色时
-                        tpl_item['item']['config']['content'] = re.sub(
-                            r'color\s*:\s*[^";]+',
-                            'color:' + scheme['long_text']['color'],
-                            tpl_item['item']['config']['content']
-                        )
                         tpl_item['item']['config']['bgColor'] = scheme['long_text']['bgColor']
                         tpl_item['item']['config']['cpBorderColor'] = scheme['long_text']['cpBorderColor']
 
