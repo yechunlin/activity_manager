@@ -17,7 +17,7 @@ def get_preview(mark, template_id) -> dict:
         return {"preview_url":""}
 
     return {
-        "preview_url": f"https://m.aihoge.com/h5?mark={mark}&tid={payload['tid']}&path=index&isPcShow=true&isPreview=true"
+        "preview_url": "https://m.aihoge.com/h5?mark=" + mark + "&tid=" + payload['tid'] + "&path=index&isPcShow=true&isPreview=true"
     }
 
 

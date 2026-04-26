@@ -36,7 +36,8 @@ def get_activity(act_id):
             "fields": res['response']['rules']['form_controls'][0]['controls'],
             "scheme": {},
             "tag_id": "",
-            "use_default_post": 0
+            "use_default_post": 0,
+            "is_raffle": int(res['response']['rules']['limit']['lottery_config']['open'])
         }
     else:
         return {"msg": "获取失败"}

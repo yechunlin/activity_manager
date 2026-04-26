@@ -3,48 +3,105 @@
     "name": "踏青出游记",
     "des": "一款绿色清新模板，适合春季以及初夏时节出游、露营、野炊...等活动",
     "template_id": 8052,
-    "mark": "designh5@form"
+    "mark": "designh5@form",
+    "view_pic": ""
   },
   {
     "name": "向劳动者致敬",
     "des": "适用于五一劳动节体验活动",
     "template_id": 8054,
-    "mark": "designh5@form"
+    "mark": "designh5@form",
+    "view_pic": ""
   },
   {
     "name": "草长莺飞·亲子互动",
     "des": "春游，亲子互动，手绘放风筝",
     "template_id": 8236,
-    "mark": "designh5@form"
+    "mark": "designh5@form",
+    "view_pic": ""
   },
   {
     "name": "摄影·城市微光",
     "des": "街拍，记录城市暖心一幕",
     "template_id": 8237,
-    "mark": "designh5@form"
+    "mark": "designh5@form",
+    "view_pic": ""
   },
   {
     "name": "阅读推荐",
     "des": "读一本书，一句话推荐，记录美好",
     "template_id": 8238,
-    "mark": "designh5@form"
+    "mark": "designh5@form",
+    "view_pic": ""
   },
   {
     "name": "春分知多少·问券调查",
     "des": "节气-春分，知识问卷",
     "template_id": 8239,
-    "mark": "designh5@form"
+    "mark": "designh5@form",
+    "view_pic": ""
   },
   {
     "name": "再生资源回收",
     "des": "垃圾上门回收",
     "template_id": 8240,
-    "mark": "designh5@form"
+    "mark": "designh5@form",
+    "view_pic": ""
   },
   {
     "name": "丰收运动会",
     "des": "丰收季节，全民大丰收",
     "template_id": 8241,
-    "mark": "designh5@form"
+    "mark": "designh5@form",
+    "view_pic": "https://xzimg.aihoge.com/xiuzan/1776933428395/66AD6F96-3B7A-414E-B7EB-51C99B0002F5.png"
+  },
+  {
+    "name": "两会精神",
+    "des": "聚焦两会，关注社会",
+    "template_id": 8242,
+    "mark": "designh5@form",
+    "view_pic": ""
+  },
+  {
+    "name": "新年许愿",
+    "des": "新年来到，快来许愿吧",
+    "template_id": 8243,
+    "mark": "designh5@form",
+    "view_pic": ""
+  },
+  {
+    "name": "‘十五’规划",
+    "des": "国家十五规划",
+    "template_id": 8244,
+    "mark": "designh5@form",
+    "view_pic": ""
+  },
+  {
+    "name": "运动一夏·奥运打call",
+    "des": "晒出自己的运动时刻，打call奥运",
+    "template_id": 8245,
+    "mark": "designh5@form",
+    "view_pic": ""
+  },
+  {
+    "name": "绿色出行·骑行",
+    "des": "环保你我他，绿色骑行",
+    "template_id": 8246,
+    "mark": "designh5@form",
+    "view_pic": ""
+  },
+  {
+    "name": "音乐节·献唱",
+    "des": "秀出自我，快来酣唱吧",
+    "template_id": 8247,
+    "mark": "designh5@form",
+    "view_pic": ""
+  },
+  {
+    "name": "摆摊招募",
+    "des": "美食街开启，快来摆摊吧",
+    "template_id": 8248,
+    "mark": "designh5@form",
+    "view_pic": ""
   }
 ]

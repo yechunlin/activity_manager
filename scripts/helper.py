@@ -45,13 +45,13 @@ def try_openai(title, size):
         url = "https://dashscope.aliyuncs.com/api/v1/services/aigc/text2image/image-synthesis"
         headers = {
             "X-DashScope-Async": "enable",
-            "Authorization": f"Bearer {api_key}",
+            "Authorization": "Bearer " + api_key,
             "Content-Type": "application/json",
         }
         payload = {
             "model": "wan2.2-t2i-flash",
             "input": {
-                "prompt": f"{title}"
+                "prompt": title
             },
             "parameters": {
                 "n": 1,
@@ -72,7 +72,7 @@ def try_openai(title, size):
             while times_num > 0:
                 url = "https://dashscope.aliyuncs.com/api/v1/tasks/" + task_id
                 headers = {
-                    "Authorization": f"Bearer {api_key}"
+                    "Authorization": "Bearer " + api_key
                 }
                 resp = requests.get(url, headers=headers)
                 data = resp.json()
@@ -155,7 +155,7 @@ def replace_html(html_template, new_text) -> str :
     # 找到第一个 <p> 标签
     first_p = soup.find("p")
     if not first_p:
-        return f"<p>{new_text}</p>"
+        return "<p>"+new_text+"</p>"
 
     # 找到最内层的文字位置，替换
     for text_node in first_p.find_all(text=True):

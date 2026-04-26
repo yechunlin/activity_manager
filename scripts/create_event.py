@@ -29,27 +29,27 @@ def create_event(data):
     token = user_token.get('token')
     # 获取活动类型
     act_type = data['act_type']
-    match act_type:
-        # 报名活动
-        case 'designh5':
-            res = designh5.add(token, data)
-        # 抽奖活动
-        case 'raffle':
-            res = raffle.add(token, data)
-        # 默认情况
-        case _:
-            res = {"err_code": -1}
+    if act_type == "designh5":
+        # 报名
+        res = designh5.add(token, data)
+    elif act_type == "raffle":
+        # 抽奖
+        res = raffle.add(token, data)
+    else:
+        # 默认
+        res = {"err_code": -1}
 
     if res['err_code'] == 0:
-        activity_id = res.get('activity_id')
         title = res.get('title')
         act_url = res.get('url')
+        act_id = res.get('act_id')
         # 尝试开启活动，成功与否都行
-        open_activity(activity_id, token)
+        open_activity(act_id, token)
         # 生成二维码
         qr_code = create_qrcode(act_url, token)
         return {
             'title': title,
+            'act_id': act_id,
             'url': act_url,
             'platform': get_domain() + '?code=' + user_id,
             'qr_code': qr_code

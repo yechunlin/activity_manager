@@ -6,10 +6,18 @@ from helper import get_domain, get_uuid_4_hex, generate
 RAFFLE_API_URL = get_domain() + '/api/h5hy/api/v0/visible/h5/save'
 RAFFLE_DEFAULT_POSTER = 'https://xzimg.aihoge.com/xiuzan/2024/03/b8fba610d15761051d2679518dad0858.png'
 
+def open_activity(activity_id, token):
+    url = 'https://ax.aihoge.com/api/lotteryhy/api/admin/cj/activity/update/status/' + activity_id
+    data = {
+        "status": 1
+    }
+    headers = {'Authorization': token}
+    requests.post(url, json=data, headers=headers)
+
 def add(token, data)->dict:
     title = data["title"]
     brief = data['brief']
-    prizes = data["prizes"]
+    #prizes = data["prizes"]
     # 开始生成活动参数
     now = int(time.time())
     start_at = now
@@ -194,7 +202,7 @@ def add(token, data)->dict:
                 "lottery_limit": {
                     "is_lottery_row": 1,
                     "is_lottery_unit": 1,
-                    "is_lottery_times": 1,
+                    "is_lottery_times": 0,
                     "is_winning_unit": 1,
                     "is_winning_times": 1,
                     "get_open": 0,
@@ -484,10 +492,11 @@ def add(token, data)->dict:
     resp = resp.json()
     if resp['state'] == 200 and resp['result']['forward_id']:
         act_id = resp['result']['forward_id']
-        act_url = f"https://m.aihoge.com/h5?mark=raffle@designh5&tid={act_id}&path=index"
+        open_activity(act_id, token)
+        act_url = "https://m.aihoge.com/h5?mark=raffle@designh5&tid=" + act_id + "&path=index"
         return {
             'err_code': 0,
-            'activity_id': act_id,
+            'act_id': act_id,
             'title': title,
             'url': act_url
         }

@@ -6,6 +6,7 @@ import requests
 from datetime import datetime
 from helper import get_domain, try_openai, rand_control_id, generate, generate_page, random_string, replace_html
 from get_activity import get_act_info
+import raffle
 
 DESIGN_API_URL = get_domain() + "/api/h5hy/api/v0/visible/h5/save"
 DESIGN_PREVIEW_API_URL = get_domain() + "/api/h5hy/api/v0/visible/preview"
@@ -156,10 +157,11 @@ def add(token, data)->dict:
     fields = data["fields"] # 表单字段
     post = data['post_img'] # 海报
     scheme = data['scheme'] # 风格配色
-    tag_id = data['tag_id'] # 预设风格id
-    use_default_post = data['use_default_post'] # 启用预设风格内部海报
+    tag_id = data['tag_id'] or "" # 预设风格id
+    use_default_post = data['use_default_post'] or 0 # 启用预设风格内部海报
     template_id = data['template_id'] # 模板id
     mark = data['mark'] # 模板标识
+    is_raffle = data['is_raffle'] or 0 # 是否关联抽奖
 
     appoint_template_flag = False
     if template_id and mark:
@@ -179,6 +181,16 @@ def add(token, data)->dict:
     payload = generate(mark, template_id, token)
     # 模板表单id
     form_control_tpl_id = ''
+    # 关联抽奖
+    raffle_activity_id = ""
+    if int(is_raffle) == 1:
+        raffle_data = {
+            "title": title + "抽奖活动",
+            "brief": "抽奖规则"
+        }
+        raffle_res = raffle.add(token, raffle_data)
+        if raffle_res['err_code'] == 0:
+            raffle_activity_id = raffle_res.get('act_id','')
 
     if appoint_template_flag:
         # 若有表单， 校准formControls
@@ -199,6 +211,8 @@ def add(token, data)->dict:
                             tpl_item['item']['config']['formControls'] = fields
                         else:
                             fields = tpl_item['item']['config']['formControls']
+                            for f_item in fields:
+                                f_item.pop("cid", None)
 
                     if brief and tpl_item['item']['type'] == 'LongText':
                         tpl_item['item']['config']['text'] = brief
@@ -286,8 +300,8 @@ def add(token, data)->dict:
                     ]
                 },
                 "lottery_config": {
-                    "open": 0,
-                    "activity_id": "",
+                    "open": int(is_raffle),
+                    "activity_id": raffle_activity_id,
                     "mode": 1,
                     "times": 1,
                     "give_times": 1,
@@ -370,10 +384,10 @@ def add(token, data)->dict:
     resp = resp.json()
     if resp['state'] == 200 and resp['result']['forward_id']:
         act_id = resp['result']['forward_id']
-        act_url = f"https://m.aihoge.com/h5?mark=designh5@form&tid={act_id}&path=index"
+        act_url = "https://m.aihoge.com/h5?mark=designh5@form&tid=" + act_id + "&path=index"
         return {
             'err_code': 0,
-            'activity_id': act_id,
+            'act_id': act_id,
             'title': title,
             'url': act_url
         }
@@ -388,8 +402,9 @@ def edit(token, data)->dict:
     fields = data["fields"]
     post = data['post_img']
     scheme = data['scheme']
-    tag_id = data['tag_id']
-    use_default_post = data['use_default_post']
+    tag_id = data['tag_id'] or ""
+    use_default_post = data['use_default_post'] or 0
+    is_raffle = data['is_raffle'] or 0  # 是否关联抽奖
 
     # 判断是否取默认风格
     if tag_id:
@@ -477,7 +492,7 @@ def edit(token, data)->dict:
                         # 换配色时
                         tpl_item['item']['config']['content'] = re.sub(
                             r'color\s*:\s*[^";]+',
-                            f'color:{scheme['long_text']['color']}',
+                            'color:' + scheme['long_text']['color'],
                             tpl_item['item']['config']['content']
                         )
                         tpl_item['item']['config']['bgColor'] = scheme['long_text']['bgColor']
@@ -505,6 +520,23 @@ def edit(token, data)->dict:
         "service": "designh5@form"
     }
 
+    if (int(is_raffle) == 1) and (int(forward['data']['limit']['lottery_config']['open']) == 0):
+        raffle_data = {
+            "title": act_data['response']['activity']['title'] + "抽奖活动",
+            "brief": "抽奖规则"
+        }
+        raffle_res = raffle.add(token, raffle_data)
+        if raffle_res['err_code'] == 0:
+            raffle_activity_id = raffle_res.get('act_id', '')
+            if raffle_activity_id:
+                forward['data']['limit']['lottery_config']['open'] = 1
+                forward['data']['limit']['lottery_config']['activity_id'] = raffle_activity_id
+
+    if int(is_raffle) == 0:
+        forward['data']['limit']['lottery_config']['open'] = 0
+        forward['data']['limit']['lottery_config']['activity_id'] = ""
+
+
     payload['forward'] = forward
     payload['tid'] = act_id
     headers = {
@@ -525,10 +557,10 @@ def edit(token, data)->dict:
     resp = resp.json()
     if resp['state'] == 200 and resp['result']['forward_id']:
         act_id = resp['result']['forward_id']
-        act_url = f"https://m.aihoge.com/h5?mark=designh5@form&tid={act_id}&path=index"
+        act_url = "https://m.aihoge.com/h5?mark=designh5@form&tid=" + act_id + "&path=index"
         return {
             'err_code': 0,
-            'activity_id': act_id,
+            'act_id': act_id,
             'title': title,
             'url': act_url
         }

@@ -21,16 +21,15 @@ def update_event(data):
     token = user_token.get('token')
     # 获取活动类型
     act_type = data['act_type']
-    match act_type:
-        # 报名活动
-        case 'designh5':
-            res = designh5.edit(token, data)
-        # 抽奖活动
-        case 'raffle':
-            res = raffle.edit(token, data)
-        # 默认情况
-        case _:
-            res = {"err_code": -1}
+    if act_type == "designh5":
+        # 报名
+        res = designh5.edit(token, data)
+    elif act_type == "raffle":
+        # 抽奖
+        res = raffle.edit(token, data)
+    else:
+        # 默认
+        res = {"err_code": -1}
 
     if res['err_code'] == 0:
         title = res.get('title')
